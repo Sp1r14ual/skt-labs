@@ -24,7 +24,7 @@ from train import ModelTrainer
 class MagneticInversionApp:
     def __init__(self, root: tk.Tk):
         self.root = root
-        self.root.title("Обратная задача магниторазведки с использованием ИНС | НГТУ ФПМИ")
+        self.root.title("Обратная задача магниторазведки с использованием ИНС")
         self.root.geometry("1400x900")
         self.root.minsize(1100, 750)
 
@@ -53,7 +53,7 @@ class MagneticInversionApp:
         self.nn_model.eval()
 
         # 3. Текущее состояние данных
-        self.true_model = self.dataset_gen.get_benchmark_model("lab1")
+        self.true_model = self.dataset_gen.get_benchmark_model("base_model")
         self.current_obs_x = self.survey.receiver_x.copy()
         self.current_obs_signal = self.survey.forward_solve(self.true_model)
         self.preprocessed_signal = None
@@ -277,8 +277,8 @@ class MagneticInversionApp:
 
     def _on_model_selected(self, event):
         sel = self.combo_model.get()
-        if "Лаб. 1" in sel:
-            self.true_model = self.dataset_gen.get_benchmark_model("lab1")
+        if "Тестовая модель" in sel:
+            self.true_model = self.dataset_gen.get_benchmark_model("test_model")
         elif "среднего" in sel:
             self.true_model = self.dataset_gen.get_benchmark_model("medium")
         elif "Наклонный" in sel:
@@ -517,6 +517,8 @@ class MagneticInversionApp:
             self.survey.z_top - self.survey.nz * self.survey.dz,
             self.survey.z_top,
         ]
+        max_val = float(np.max(grid)) if len(grid) > 0 else 0.0
+        vmax = max(1.0, max_val) if max_val > 0.05 else 1.0
         im = ax.imshow(
             grid,
             extent=extent,
@@ -524,9 +526,10 @@ class MagneticInversionApp:
             aspect="auto",
             cmap="viridis",
             vmin=0.0,
-            vmax=1.0,
+            vmax=vmax,
         )
-        ax.set_title(title, fontsize=10, fontweight="bold")
+        display_title = f"{title} (макс: {max_val:.2f})" if max_val > 0.01 else title
+        ax.set_title(display_title, fontsize=10, fontweight="bold")
         ax.set_xlabel("X (м)", fontsize=8)
         ax.set_ylabel("Z (м)", fontsize=8)
         ax.grid(True, linestyle="--", alpha=0.3)

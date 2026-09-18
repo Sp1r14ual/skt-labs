@@ -119,7 +119,7 @@ class ClassicalInversion:
         misfit_l2 = np.linalg.norm(diff)
         rel_misfit = misfit_l2 / (np.linalg.norm(g_obs) + 1e-12) * 100.0
 
-        # R_sq по формуле (39) пособия:
+        # R_sq:
         denom = np.maximum(np.abs(g_obs), np.abs(g_calc)) + 1e-12
         r_sq = 100.0 * np.sqrt(np.mean((diff / denom) ** 2))
 

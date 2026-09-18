@@ -97,11 +97,11 @@ def run_all_experiments(
 
     # ЭКСПЕРИМЕНТ 1: Тестовая модель
     print(
-        "\n[1/5] Эксперимент 1: Восстановление модели из 1-й лабораторной работы..."
+        "\n[1/5] Эксперимент 1: Восстановление тестовой модели..."
     )
-    true_lab1 = gen.get_benchmark_model("lab1")
+    true_lab1 = gen.get_benchmark_model("test_model")
     sig_lab1 = survey.forward_solve(true_lab1)
-    # Добавим шум 1% как в первой работе
+    # Добавим шум 1%
     np.random.seed(42)
     sig_lab1_obs = survey.add_noise(sig_lab1, noise_level=0.01)
 
@@ -137,7 +137,7 @@ def run_all_experiments(
     ax_res = fig.add_subplot(gs[1, 2])
 
     im1 = plot_2d_model(
-        ax_true, survey=survey, vector_rho=true_lab1, title="Истинная модель (Лаб. 1)"
+        ax_true, survey=survey, vector_rho=true_lab1, title="Истинная модель (Тестовая)"
     )
     plt.colorbar(im1, ax=ax_true, fraction=0.046, pad=0.04)
 
@@ -204,7 +204,7 @@ def run_all_experiments(
     ax_res.legend()
 
     plt.tight_layout()
-    p1 = os.path.join(results_dir, "exp1_lab1_benchmark.png")
+    p1 = os.path.join(results_dir, "exp1_test_model.png")
     plt.savefig(p1, dpi=200)
     plt.close()
     print(f"  Сохранен график: {p1}")

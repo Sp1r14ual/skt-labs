@@ -55,7 +55,7 @@ class MagneticSurvey2D:
         self.p0 = np.array(p0, dtype=np.float64)
 
         # Вычисление центров ячеек
-        # Ячейки нумеруются: i = iz + ix * nz (как в коде прошлой работы)
+        # Ячейки нумеруются: i = iz + ix * nz
         self.cells = []
         for ix in range(self.nx):
             xc = self.x_min + (ix + 0.5) * self.dx
@@ -94,7 +94,7 @@ class MagneticSurvey2D:
         self, cell_coords: np.ndarray, rec_coords: np.ndarray
     ) -> tuple[float, float]:
         """
-        Вычисление дипольного отклика ячейки в точке приема по формулам (7)-(9) пособия:
+        Вычисление дипольного отклика ячейки в точке приема:
         r = sqrt(dx^2 + dy^2 + dz^2)
         B_x = mes(Omega) / (4*pi*r^3) * [ p_x*(3*x~^2/r^2 - 1) + p_y*(3*x~*y~/r^2) + p_z*(3*x~*z~/r^2) ]
         B_z = mes(Omega) / (4*pi*r^3) * [ p_x*(3*x~*z~/r^2) + p_y*(3*y~*z~/r^2) + p_z*(3*z~^2/r^2 - 1) ]

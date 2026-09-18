@@ -32,8 +32,7 @@ class MagneticInversionNet(nn.Module):
         self.n_inputs = n_inputs
         self.n_outputs = n_outputs
 
-        # Входная нормализация (пособие, стр. 58: "Для повышения производительности...
-        # возможно использование во входном слое пакетной нормализации")
+        # Входная нормализация
         self.input_norm = (
             nn.BatchNorm1d(n_inputs, affine=True)
             if use_batch_norm

@@ -136,17 +136,16 @@ class DatasetGenerator:
 
         return vector
 
-    def get_benchmark_model(self, name: str = "lab1") -> np.ndarray:
+    def get_benchmark_model(self, name: str = "test_model") -> np.ndarray:
         """
-        Предустановленные тестовые модели, включая модель из первой лабораторной работы.
+        Тестовые модели.
         """
         vector = np.zeros(self.n_cells, dtype=np.float64)
 
-        if name == "lab1":
-            # Модель из первой лабораторной работы:
-            # прямоугольное тело плотности rho=1.0 (в координатах сетки)
+        if name in ["test_model", "base_model", "lab1"]:
+            # тело плотности rho=1.0 (в координатах сетки)
             if self.nx == 40 and self.nz == 20:
-                # Точные индексы из main_all.py: ix in [8, 12), iz in [3, 6)
+                # Точные индексы: ix in [8, 12), iz in [3, 6)
                 for ix in range(8, 12):
                     for iz in range(3, 6):
                         vector[self.survey.cell_index(ix, iz)] = 1.0
@@ -158,7 +157,7 @@ class DatasetGenerator:
                         vector[self.survey.cell_index(ix, iz)] = 1.0
 
         elif name == "medium":
-            # Аномалия среднего размера в центре (Рис. 45 пособия)
+            # Аномалия среднего размера в центре
             mid_x = self.nx // 2
             mid_z = self.nz // 2
             for ix in range(mid_x - 3, mid_x + 3):
@@ -167,7 +166,7 @@ class DatasetGenerator:
                         vector[self.survey.cell_index(ix, iz)] = 1.0
 
         elif name == "tilted":
-            # Наклонное тело (Рис. 46 пособия)
+            # Наклонное тело
             for step in range(min(self.nx // 2, self.nz)):
                 ix = 4 + step
                 iz = 1 + step
@@ -177,7 +176,7 @@ class DatasetGenerator:
                         vector[self.survey.cell_index(ix, iz + 1)] = 1.0
 
         elif name == "two_separated":
-            # Два разделенных тела (Рис. 48 пособия)
+            # Два разделенных тела
             # Тело 1
             for ix in range(2, 6):
                 for iz in range(2, 5):
@@ -190,7 +189,7 @@ class DatasetGenerator:
                         vector[self.survey.cell_index(ix, iz)] = 1.0
 
         elif name == "two_stacked":
-            # Два тела одно над другим (Рис. 49 пособия)
+            # Два тела одно над другим
             mid_x = self.nx // 2
             for ix in range(mid_x - 3, mid_x + 3):
                 # Верхнее
@@ -228,8 +227,8 @@ class DatasetGenerator:
         for i in range(n_isolated):
             models[n_balanced + i] = self.generate_isolated_bodies_model()
 
-        # Также гарантированно добавляем тестовую модель из Лаб. 1 в датасет
-        models[-1] = self.get_benchmark_model("lab1")
+        # Также гарантированно добавляем тестовую модель в датасет
+        models[-1] = self.get_benchmark_model("test_model")
 
         # Быстрый векторизованный расчет сигналов: S = models @ L.T
         # signals shape: (n_samples, n_receivers)
