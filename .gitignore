@@ -220,4 +220,5 @@ __marimo__/
 #PyTorch
 *.pt
 *.npz
+*.png
 results/
