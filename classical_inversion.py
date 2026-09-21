@@ -56,7 +56,7 @@ class ClassicalInversion:
         self,
         g_obs: np.ndarray,
         gamma: float = 1e-2,
-        alpha: float = 0.0,
+        alpha: float = 1e-4,
         auto_scale: bool = True,
         non_negative: bool = True,
     ) -> np.ndarray:
