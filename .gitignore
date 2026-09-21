@@ -219,9 +219,9 @@ __marimo__/
 
 #PyTorch
 *.pt
-!best_model.pt
+# !best_model.pt
 *.npz
-!dataset.npz
+# !dataset.npz
 *.png
-!loss_history.png
+# !loss_history.png
 results/

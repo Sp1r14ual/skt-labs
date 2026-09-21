@@ -63,9 +63,20 @@ class MagneticInversionApp:
         self.nn_predicted_model = None
         self.reg_predicted_model = None
 
+        # 4. Состояние датасета
+        self.X_train = None
+        self.y_train = None
+        self.X_val = None
+        self.y_val = None
+        self.dataset_path = "dataset.npz"
+
         # Создание интерфейса
         self._setup_ui()
         self.update_plots()
+
+        # Автоматическая загрузка датасета при старте, если он существует
+        if os.path.exists(self.dataset_path):
+            self.load_dataset_file(self.dataset_path)
 
     def _setup_ui(self):
         # Главный контейнер
@@ -122,8 +133,65 @@ class MagneticInversionApp:
         self.combo_model.pack(fill=tk.X, **pad_opts)
         self.combo_model.bind("<<ComboboxSelected>>", self._on_model_selected)
 
-        # --- Секция 2: Параметры съемки и шум ---
-        grp_survey = ttk.LabelFrame(self.control_frame, text="2. Параметры измерений")
+        # --- Секция 2: Работа с датасетом ---
+        grp_dataset = ttk.LabelFrame(self.control_frame, text="2. Синтетический датасет")
+        grp_dataset.pack(fill=tk.X, pady=4)
+
+        self.lbl_dataset_status = ttk.Label(
+            grp_dataset,
+            text="Датасет: не загружен",
+            font=("TkDefaultFont", 8, "italic"),
+            justify=tk.LEFT,
+            wraplength=350,
+        )
+        self.lbl_dataset_status.pack(anchor=tk.W, padx=5, pady=2)
+
+        # Кнопка тестирования на случайном сэмпле из val
+        self.btn_val_sample = ttk.Button(
+            grp_dataset,
+            text="🎲 Пример из Val (тест)",
+            command=self.load_random_val_sample,
+            state=tk.DISABLED,
+        )
+        self.btn_val_sample.pack(fill=tk.X, padx=5, pady=2)
+
+        # Выбор номера сэмпла
+        idx_frame = ttk.Frame(grp_dataset)
+        idx_frame.pack(fill=tk.X, padx=5, pady=2)
+        ttk.Label(idx_frame, text="Сэмпл №:").pack(side=tk.LEFT)
+        self.spn_val_idx = ttk.Spinbox(
+            idx_frame, from_=0, to=0, width=6, state=tk.DISABLED
+        )
+        self.spn_val_idx.pack(side=tk.LEFT, padx=3)
+        self.btn_load_idx = ttk.Button(
+            idx_frame,
+            text="Загрузить",
+            command=self.load_val_sample_by_index,
+            state=tk.DISABLED,
+            width=9,
+        )
+        self.btn_load_idx.pack(side=tk.LEFT, padx=2)
+
+        # Управление файлами датасета
+        ds_btn_frame = ttk.Frame(grp_dataset)
+        ds_btn_frame.pack(fill=tk.X, padx=5, pady=3)
+
+        btn_load_ds = ttk.Button(
+            ds_btn_frame,
+            text="📁 Загрузить .npz...",
+            command=self.browse_load_dataset,
+        )
+        btn_load_ds.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
+
+        btn_gen_ds = ttk.Button(
+            ds_btn_frame,
+            text="⚙ Генератор...",
+            command=self.open_dataset_generator_dialog,
+        )
+        btn_gen_ds.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(2, 0))
+
+        # --- Секция 3: Параметры съемки и шум ---
+        grp_survey = ttk.LabelFrame(self.control_frame, text="3. Параметры измерений")
         grp_survey.pack(fill=tk.X, pady=4)
 
         # Уровень шума
@@ -160,8 +228,8 @@ class MagneticInversionApp:
         btn_recalc = ttk.Button(grp_survey, text="Сгенерировать заново поле", command=self.calculate_field)
         btn_recalc.pack(fill=tk.X, **pad_opts)
 
-        # --- Секция 3: Препроцессор (Сплайн Эрмита) ---
-        grp_prep = ttk.LabelFrame(self.control_frame, text="3. Препроцессор входных данных")
+        # --- Секция 4: Препроцессор (Сплайн Эрмита) ---
+        grp_prep = ttk.LabelFrame(self.control_frame, text="4. Препроцессор входных данных")
         grp_prep.pack(fill=tk.X, pady=4)
 
         ttk.Label(
@@ -176,8 +244,8 @@ class MagneticInversionApp:
         )
         btn_prep.pack(fill=tk.X, **pad_opts)
 
-        # --- Секция 4: Инверсия ---
-        grp_inv = ttk.LabelFrame(self.control_frame, text="4. Решение обратной задачи")
+        # --- Секция 5: Инверсия ---
+        grp_inv = ttk.LabelFrame(self.control_frame, text="5. Решение обратной задачи")
         grp_inv.pack(fill=tk.X, pady=4)
 
         # Настройки параметров регуляризации для классического метода
@@ -216,8 +284,8 @@ class MagneticInversionApp:
         )
         btn_solve_both.pack(fill=tk.X, **pad_opts)
 
-        # --- Секция 5: Обучение сети ---
-        grp_train = ttk.LabelFrame(self.control_frame, text="5. Обучение нейросети")
+        # --- Секция 6: Обучение сети ---
+        grp_train = ttk.LabelFrame(self.control_frame, text="6. Обучение нейросети")
         grp_train.pack(fill=tk.X, pady=4)
 
         btn_train_dialog = ttk.Button(
@@ -225,8 +293,8 @@ class MagneticInversionApp:
         )
         btn_train_dialog.pack(fill=tk.X, **pad_opts)
 
-        # --- Секция 6: Метрики и экспорт ---
-        grp_metrics = ttk.LabelFrame(self.control_frame, text="6. Метрики и экспорт")
+        # --- Секция 7: Метрики и экспорт ---
+        grp_metrics = ttk.LabelFrame(self.control_frame, text="7. Метрики и экспорт")
         grp_metrics.pack(fill=tk.X, pady=4)
 
         self.txt_metrics = tk.Text(grp_metrics, height=8, width=38, font=("Consolas", 8))
@@ -606,32 +674,319 @@ class MagneticInversionApp:
             f"Файлы успешно сохранены:\n{sig_file}\n{model_file}",
         )
 
+    def _update_dataset_ui_state(self):
+        """Обновление статуса и доступности элементов интерфейса датасета."""
+        if self.X_train is not None and self.y_val is not None:
+            fname = os.path.basename(self.dataset_path) if self.dataset_path else "В памяти"
+            self.lbl_dataset_status.config(
+                text=f"{fname}\nTrain: {len(self.X_train)}, Val (тест): {len(self.y_val)}"
+            )
+            self.btn_val_sample.config(state=tk.NORMAL)
+            self.spn_val_idx.config(
+                state=tk.NORMAL,
+                from_=0,
+                to=max(0, len(self.y_val) - 1),
+            )
+            self.btn_load_idx.config(state=tk.NORMAL)
+        else:
+            self.lbl_dataset_status.config(text="Датасет: не загружен")
+            self.btn_val_sample.config(state=tk.DISABLED)
+            self.spn_val_idx.config(state=tk.DISABLED)
+            self.btn_load_idx.config(state=tk.DISABLED)
+
+    def load_dataset_file(self, path: str):
+        """Загрузка датасета из .npz файла в память приложения."""
+        if not os.path.exists(path):
+            return False
+        try:
+            X_tr, y_tr, X_val, y_val = DatasetGenerator.load_dataset(path)
+            self.X_train = X_tr
+            self.y_train = y_tr
+            self.X_val = X_val
+            self.y_val = y_val
+            self.dataset_path = path
+            self._update_dataset_ui_state()
+            print(f"Датасет успешно загружен из {path}: {len(X_tr)} train, {len(X_val)} val")
+            return True
+        except Exception as e:
+            messagebox.showerror("Ошибка загрузки", f"Не удалось прочитать {path}:\n{e}")
+            return False
+
+    def browse_load_dataset(self):
+        """Диалог выбора и загрузки .npz файла датасета."""
+        path = filedialog.askopenfilename(
+            title="Выберите файл датасета",
+            filetypes=[("NumPy Dataset", "*.npz"), ("Все файлы", "*.*")],
+        )
+        if path:
+            self.load_dataset_file(path)
+
+    def load_random_val_sample(self):
+        """Загрузка случайной модели из тестовой выборки y_val."""
+        if self.y_val is None or len(self.y_val) == 0:
+            messagebox.showwarning("Датасет", "Тестовая выборка не загружена.")
+            return
+        idx = int(np.random.randint(0, len(self.y_val)))
+        self.spn_val_idx.delete(0, tk.END)
+        self.spn_val_idx.insert(0, str(idx))
+        self.load_val_sample_by_index(idx)
+
+    def load_val_sample_by_index(self, idx: int = None):
+        """Загрузка конкретной модели из тестовой выборки по номеру."""
+        if self.y_val is None or len(self.y_val) == 0:
+            messagebox.showwarning("Датасет", "Тестовая выборка не загружена.")
+            return
+        if idx is None:
+            try:
+                idx = int(self.spn_val_idx.get())
+            except ValueError:
+                idx = 0
+        idx = max(0, min(idx, len(self.y_val) - 1))
+
+        self.true_model = self.y_val[idx].copy()
+        if self.X_val is not None and len(self.X_val) > idx:
+            self.current_obs_signal = self.X_val[idx].copy()
+        else:
+            self.current_obs_signal = self.survey.forward_solve(self.true_model)
+
+        self.current_obs_x = self.survey.receiver_x.copy()
+        self.preprocessed_signal = None
+        self.nn_predicted_model = None
+        self.reg_predicted_model = None
+
+        self.combo_model.set(f"Тестовый сэмпл #{idx}")
+        self.update_plots()
+
+        self.txt_metrics.delete("1.0", tk.END)
+        self.txt_metrics.insert(
+            tk.END,
+            f"Загружен тестовый образец #{idx} из Val-выборки.\n"
+            f"Нажмите '★ Решить с помощью ИНС' для тестирования точности.",
+        )
+
+    def open_dataset_generator_dialog(self):
+        """Диалоговое окно настройки и генерации синтетического датасета."""
+        win = tk.Toplevel(self.root)
+        win.title("Генератор синтетического датасета")
+        win.geometry("520x460")
+        win.resizable(False, False)
+
+        frame = ttk.Frame(win, padding="12")
+        frame.pack(fill=tk.BOTH, expand=True)
+
+        ttk.Label(
+            frame,
+            text="Параметры синтетического датасета (пособие НГТУ):",
+            font=("TkDefaultFont", 9, "bold"),
+        ).pack(anchor=tk.W, pady=(0, 10))
+
+        # 1. Число моделей
+        f1 = ttk.Frame(frame)
+        f1.pack(fill=tk.X, pady=4)
+        ttk.Label(f1, text="Общий объем датасета (моделей):", width=34).pack(side=tk.LEFT)
+        ent_samples = ttk.Entry(f1, width=10)
+        ent_samples.insert(0, "2500")
+        ent_samples.pack(side=tk.LEFT)
+        ttk.Label(f1, text="(рек. ≥ 2000)", font=("TkDefaultFont", 8, "italic")).pack(side=tk.LEFT, padx=5)
+
+        # 2. Доля Способа 2
+        f2 = ttk.Frame(frame)
+        f2.pack(fill=tk.X, pady=4)
+        ttk.Label(f2, text="Доля Способа 2 (случайные разрезы, %):", width=34).pack(side=tk.LEFT)
+        ent_ratio = ttk.Entry(f2, width=10)
+        ent_ratio.insert(0, "60")
+        ent_ratio.pack(side=tk.LEFT)
+        ttk.Label(f2, text="(Способ 1: остаток)", font=("TkDefaultFont", 8, "italic")).pack(side=tk.LEFT, padx=5)
+
+        # 3. Шум
+        f3 = ttk.Frame(frame)
+        f3.pack(fill=tk.X, pady=4)
+        ttk.Label(f3, text="Уровень шума в сигналах (%):", width=34).pack(side=tk.LEFT)
+        ent_noise = ttk.Entry(f3, width=10)
+        ent_noise.insert(0, "1.0")
+        ent_noise.pack(side=tk.LEFT)
+
+        # 4. Файл сохранения
+        f4 = ttk.Frame(frame)
+        f4.pack(fill=tk.X, pady=4)
+        ttk.Label(f4, text="Сохранить в файл:", width=34).pack(side=tk.LEFT)
+        ent_path = ttk.Entry(f4, width=16)
+        ent_path.insert(0, self.dataset_path)
+        ent_path.pack(side=tk.LEFT)
+
+        def choose_save_file():
+            fp = filedialog.asksaveasfilename(
+                defaultextension=".npz",
+                filetypes=[("NumPy Dataset", "*.npz")],
+                initialfile=ent_path.get(),
+            )
+            if fp:
+                ent_path.delete(0, tk.END)
+                ent_path.insert(0, fp)
+
+        btn_browse = ttk.Button(f4, text="Обзор...", width=8, command=choose_save_file)
+        btn_browse.pack(side=tk.LEFT, padx=4)
+
+        # Информационная плашка
+        info_frame = ttk.LabelFrame(frame, text="Параметры сплита и геометрии", padding=8)
+        info_frame.pack(fill=tk.X, pady=10)
+        ttk.Label(
+            info_frame,
+            text=f"• Разбиение: 90% обучение / 10% валидация и тест (по заданию)\n"
+                 f"• Сетка моделей: {self.survey.nx} × {self.survey.nz} ячеек ({self.survey.n_cells} парам.)\n"
+                 f"• Профиль: {self.survey.n_receivers} приемников (компонента Bx)",
+            font=("TkDefaultFont", 8),
+            justify=tk.LEFT,
+        ).pack(anchor=tk.W)
+
+        lbl_status = ttk.Label(
+            frame, text="Готов к запуску генерации", font=("TkDefaultFont", 9, "italic")
+        )
+        lbl_status.pack(pady=4)
+
+        progress = ttk.Progressbar(frame, mode="indeterminate")
+        progress.pack(fill=tk.X, pady=4)
+
+        def start_gen():
+            try:
+                n_samp = int(ent_samples.get())
+                ratio_b = float(ent_ratio.get()) / 100.0
+                noise_lvl = float(ent_noise.get()) / 100.0
+                save_to = ent_path.get().strip()
+                if not save_to:
+                    raise ValueError("Имя файла не может быть пустым")
+            except ValueError as ve:
+                messagebox.showerror("Ошибка", f"Некорректные параметры: {ve}")
+                return
+
+            btn_start.config(state=tk.DISABLED)
+            progress.start(10)
+            lbl_status.config(text="Генерация синтетических моделей...")
+
+            def gen_worker():
+                try:
+                    np.random.seed(42)
+                    models = np.zeros((n_samp, self.survey.n_cells), dtype=np.float32)
+                    n_bal = int(n_samp * ratio_b)
+                    n_iso = n_samp - n_bal
+
+                    for i in range(n_bal):
+                        models[i] = self.dataset_gen.generate_balanced_model()
+                    for i in range(n_iso):
+                        models[n_bal + i] = self.dataset_gen.generate_isolated_bodies_model()
+
+                    models[-1] = self.dataset_gen.get_benchmark_model("test_model")
+
+                    self.root.after(0, lambda: lbl_status.config(text="Расчет прямых задач (матрица L)..."))
+                    signals = (models @ self.survey.L.T).astype(np.float32)
+
+                    if noise_lvl > 0:
+                        noise = np.random.normal(
+                            0.0,
+                            noise_lvl * np.max(np.abs(signals), axis=1, keepdims=True),
+                            size=signals.shape,
+                        ).astype(np.float32)
+                        signals += noise
+
+                    n_train = int(n_samp * 0.9)
+                    indices = np.arange(n_samp)
+                    np.random.shuffle(indices)
+
+                    train_idx = indices[:n_train]
+                    val_idx = indices[n_train:]
+
+                    X_tr = signals[train_idx]
+                    y_tr = models[train_idx]
+                    X_val = signals[val_idx]
+                    y_val = models[val_idx]
+
+                    self.root.after(0, lambda: lbl_status.config(text="Сохранение в сжатый .npz..."))
+                    np.savez_compressed(
+                        save_to,
+                        X_train=X_tr,
+                        y_train=y_tr,
+                        X_val=X_val,
+                        y_val=y_val,
+                    )
+
+                    def on_complete():
+                        progress.stop()
+                        btn_start.config(state=tk.NORMAL)
+                        lbl_status.config(text=f"Успешно сохранено: {save_to}")
+                        self.load_dataset_file(save_to)
+                        messagebox.showinfo(
+                            "Генерация завершена",
+                            f"Сгенерирован датасет из {n_samp} моделей.\n"
+                            f"Train: {len(X_tr)}, Val (тест): {len(X_val)}.\n"
+                            f"Файл сохранен: {save_to}",
+                        )
+                        win.destroy()
+
+                    self.root.after(0, on_complete)
+                except Exception as ex:
+                    def on_error(err=str(ex)):
+                        progress.stop()
+                        btn_start.config(state=tk.NORMAL)
+                        lbl_status.config(text="Ошибка генерации")
+                        messagebox.showerror("Ошибка", f"Произошла ошибка при генерации:\n{err}")
+                    self.root.after(0, on_error)
+
+            threading.Thread(target=gen_worker, daemon=True).start()
+
+        btn_start = ttk.Button(frame, text="▶ Сгенерировать и сохранить", command=start_gen)
+        btn_start.pack(fill=tk.X, pady=6)
+
     def open_train_dialog(self):
         """Окно адаптивного обучения нейросети с графиком кривых потерь в реальном времени."""
         win = tk.Toplevel(self.root)
         win.title("Обучение искусственной нейронной сети")
-        win.geometry("750x550")
+        win.geometry("780x590")
 
         frame_top = ttk.Frame(win, padding="10")
         frame_top.pack(fill=tk.X)
 
-        ttk.Label(frame_top, text="Размер датасета:").grid(row=0, column=0, sticky=tk.W)
+        # Выбор источника данных для обучения
+        has_loaded = self.X_train is not None and len(self.X_train) > 0
+        var_source = tk.StringVar(value="loaded" if has_loaded else "generate")
+
+        source_frame = ttk.LabelFrame(frame_top, text="Источник обучающей выборки", padding="4 6")
+        source_frame.grid(row=0, column=0, columnspan=6, sticky=tk.EW, pady=(0, 6))
+
+        rb_loaded = ttk.Radiobutton(
+            source_frame,
+            text=f"Использовать текущий загруженный датасет ({len(self.X_train)} train, {len(self.X_val)} val)"
+                 if has_loaded else "Использовать текущий загруженный датасет (нет в памяти)",
+            variable=var_source,
+            value="loaded",
+            state=tk.NORMAL if has_loaded else tk.DISABLED,
+        )
+        rb_loaded.pack(anchor=tk.W, pady=1)
+
+        rb_gen = ttk.Radiobutton(
+            source_frame,
+            text="Сгенерировать новый датасет перед обучением",
+            variable=var_source,
+            value="generate",
+        )
+        rb_gen.pack(anchor=tk.W, pady=1)
+
+        ttk.Label(frame_top, text="Размер (при ген.):").grid(row=1, column=0, sticky=tk.W)
         ent_samples = ttk.Entry(frame_top, width=8)
         ent_samples.insert(0, "2500")
-        ent_samples.grid(row=0, column=1, padx=5, pady=2)
+        ent_samples.grid(row=1, column=1, padx=5, pady=2)
 
-        ttk.Label(frame_top, text="Эпох:").grid(row=0, column=2, sticky=tk.W, padx=10)
+        ttk.Label(frame_top, text="Эпох:").grid(row=1, column=2, sticky=tk.W, padx=6)
         ent_epochs = ttk.Entry(frame_top, width=8)
         ent_epochs.insert(0, "60")
-        ent_epochs.grid(row=0, column=3, padx=5, pady=2)
+        ent_epochs.grid(row=1, column=3, padx=5, pady=2)
 
-        ttk.Label(frame_top, text="Learning Rate:").grid(row=0, column=4, sticky=tk.W, padx=10)
+        ttk.Label(frame_top, text="Learning Rate:").grid(row=1, column=4, sticky=tk.W, padx=6)
         ent_lr = ttk.Entry(frame_top, width=8)
         ent_lr.insert(0, "0.002")
-        ent_lr.grid(row=0, column=5, padx=5, pady=2)
+        ent_lr.grid(row=1, column=5, padx=5, pady=2)
 
         lbl_status = ttk.Label(frame_top, text="Статус: готов к обучению", font=("TkDefaultFont", 9, "bold"))
-        lbl_status.grid(row=1, column=0, columnspan=4, sticky=tk.W, pady=8)
+        lbl_status.grid(row=2, column=0, columnspan=4, sticky=tk.W, pady=6)
 
         # Matplotlib canvas для живых кривых обучения
         fig_loss, ax_loss = plt.subplots(figsize=(7, 4), dpi=90)
@@ -662,14 +1017,20 @@ class MagneticInversionApp:
                 return
 
             btn_start.config(state=tk.DISABLED)
-            lbl_status.config(text="Генерация датасета...")
 
             def worker():
-                gen = DatasetGenerator(self.survey)
-                # Генерация датасета
-                X_tr, y_tr, X_val, y_val = gen.generate_dataset(
-                    n_samples=n_samples, noise_level=0.01
-                )
+                if var_source.get() == "loaded" and self.X_train is not None:
+                    X_tr, y_tr = self.X_train, self.y_train
+                    X_val, y_val = self.X_val, self.y_val
+                else:
+                    self.root.after(0, lambda: lbl_status.config(text=f"Генерация датасета ({n_samples} моделей)..."))
+                    gen = DatasetGenerator(self.survey)
+                    X_tr, y_tr, X_val, y_val = gen.generate_dataset(
+                        n_samples=n_samples, noise_level=0.01, save_path=self.dataset_path
+                    )
+                    self.X_train, self.y_train = X_tr, y_tr
+                    self.X_val, self.y_val = X_val, y_val
+                    self.root.after(0, lambda: self._update_dataset_ui_state())
 
                 self.root.after(0, lambda: lbl_status.config(text="Идет обучение нейросети..."))
                 trainer = ModelTrainer(self.nn_model, learning_rate=lr)
@@ -722,7 +1083,7 @@ class MagneticInversionApp:
         btn_start = ttk.Button(
             frame_top, text="Запустить обучение", command=start_train
         )
-        btn_start.grid(row=1, column=4, columnspan=2, sticky=tk.E, pady=8)
+        btn_start.grid(row=2, column=4, columnspan=2, sticky=tk.E, pady=6)
 
     def on_close(self):
         """Полное и корректное завершение программы при закрытии окна."""
