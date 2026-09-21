@@ -149,7 +149,7 @@ class MagneticInversionApp:
         # Кнопка тестирования на случайном сэмпле из val
         self.btn_val_sample = ttk.Button(
             grp_dataset,
-            text="🎲 Пример из Val (тест)",
+            text="Случайная модель",
             command=self.load_random_val_sample,
             state=tk.DISABLED,
         )
@@ -178,14 +178,14 @@ class MagneticInversionApp:
 
         btn_load_ds = ttk.Button(
             ds_btn_frame,
-            text="📁 Загрузить .npz...",
+            text="Загрузить .npz",
             command=self.browse_load_dataset,
         )
         btn_load_ds.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 2))
 
         btn_gen_ds = ttk.Button(
             ds_btn_frame,
-            text="⚙ Генератор...",
+            text="Генератор",
             command=self.open_dataset_generator_dialog,
         )
         btn_gen_ds.pack(side=tk.RIGHT, fill=tk.X, expand=True, padx=(2, 0))
@@ -252,19 +252,14 @@ class MagneticInversionApp:
         reg_params_frame = ttk.Frame(grp_inv)
         reg_params_frame.pack(fill=tk.X, **pad_opts)
 
-        ttk.Label(reg_params_frame, text="γ (gamma):").grid(row=0, column=0, sticky=tk.W)
-        self.ent_gamma = ttk.Entry(reg_params_frame, width=8)
+        ttk.Label(reg_params_frame, text="Параметр γ (gamma):").pack(side=tk.LEFT)
+        self.ent_gamma = ttk.Entry(reg_params_frame, width=10)
         self.ent_gamma.insert(0, "0.01")
-        self.ent_gamma.grid(row=0, column=1, padx=4, pady=2)
-
-        ttk.Label(reg_params_frame, text="α (alpha):").grid(row=0, column=2, sticky=tk.W, padx=4)
-        self.ent_alpha = ttk.Entry(reg_params_frame, width=8)
-        self.ent_alpha.insert(0, "0.0001")
-        self.ent_alpha.grid(row=0, column=3, padx=4, pady=2)
+        self.ent_gamma.pack(side=tk.LEFT, padx=5)
 
         btn_solve_nn = ttk.Button(
             grp_inv,
-            text="★ Решить с помощью ИНС (Нейросеть)",
+            text="Решить с помощью нейросети",
             command=self.solve_nn,
             style="Accent.TButton",
         )
@@ -456,13 +451,8 @@ class MagneticInversionApp:
         except ValueError:
             gamma = 0.01
 
-        try:
-            alpha = float(self.ent_alpha.get())
-        except ValueError:
-            alpha = 0.0001
-
         self.reg_predicted_model = self.classical_solver.solve(
-            sig_to_use, gamma=gamma, alpha=alpha, auto_scale=True
+            sig_to_use, gamma=gamma, alpha=0.0, auto_scale=True
         )
         self._update_metrics_display()
         self.update_plots()
@@ -510,7 +500,7 @@ class MagneticInversionApp:
 
         # 1. Истинная модель (ax[0, 0])
         self._draw_grid_on_ax(
-            self.axes[0, 0], self.true_model, "Истинная модель среды (кликните для ред.)"
+            self.axes[0, 0], self.true_model, "Истинная модель среды"
         )
 
         # 2. ИНС восстановление (ax[0, 1])
