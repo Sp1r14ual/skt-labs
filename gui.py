@@ -48,9 +48,11 @@ class MagneticInversionApp:
                 self.nn_model.load_state_dict(
                     torch.load(self.weights_path, weights_only=True)
                 )
-                print("Успешно загружены веса нейросети.")
+                print("Успешно загружены веса нейросети (best_model.pt).")
             except Exception as e:
                 print(f"Ошибка загрузки весов: {e}")
+        else:
+            print("Внимание: Файл весов best_model.pt не найден. Для качественного восстановления обучите ИНС.")
         self.nn_model.eval()
 
         # 3. Текущее состояние данных
@@ -351,6 +353,15 @@ class MagneticInversionApp:
 
     def solve_nn(self):
         """Решение обратной задачи с помощью обученной нейросети."""
+        if not os.path.exists(self.weights_path):
+            messagebox.showwarning(
+                "Веса не найдены",
+                "Файл весов нейросети (best_model.pt) не найден!\n\n"
+                "Сеть еще не обучена, поэтому её отклик будет фоновым (~0.5).\n"
+                "Пожалуйста, запустите обучение через 'Открыть окно обучения ИНС...'"
+            )
+            return
+
         sig_to_use = self.current_obs_signal
         if len(sig_to_use) != self.survey.n_receivers or self.preprocessed_signal is not None:
             if self.preprocessed_signal is None:
@@ -660,7 +671,7 @@ class MagneticInversionApp:
                     n_samples=n_samples, noise_level=0.01
                 )
 
-                lbl_status.config(text="Идет обучение нейросети...")
+                self.root.after(0, lambda: lbl_status.config(text="Идет обучение нейросети..."))
                 trainer = ModelTrainer(self.nn_model, learning_rate=lr)
 
                 ep_list, tr_list, val_list = [], [], []
@@ -671,18 +682,23 @@ class MagneticInversionApp:
                     val_list.append(val_loss)
 
                     if ep % 2 == 0 or ep == tot:
-                        ax_loss.clear()
-                        ax_loss.plot(ep_list, tr_list, "b-", label="Train Loss")
-                        ax_loss.plot(ep_list, val_list, "r--", label="Val Loss")
-                        ax_loss.set_yscale("log")
-                        ax_loss.set_title(
-                            f"Эпоха {ep}/{tot} | Val MSE: {val_loss:.5f} | Val MAE: {val_mae:.4f}"
-                        )
-                        ax_loss.set_xlabel("Эпоха")
-                        ax_loss.set_ylabel("MSE (log)")
-                        ax_loss.grid(True, linestyle=":")
-                        ax_loss.legend()
-                        canvas_loss.draw()
+                        def update_chart():
+                            try:
+                                ax_loss.clear()
+                                ax_loss.plot(ep_list, tr_list, "b-", label="Train Loss")
+                                ax_loss.plot(ep_list, val_list, "r--", label="Val Loss")
+                                ax_loss.set_yscale("log")
+                                ax_loss.set_title(
+                                    f"Эпоха {ep}/{tot} | Val MSE: {val_loss:.5f} | Val MAE: {val_mae:.4f}"
+                                )
+                                ax_loss.set_xlabel("Эпоха")
+                                ax_loss.set_ylabel("MSE (log)")
+                                ax_loss.grid(True, linestyle=":")
+                                ax_loss.legend()
+                                canvas_loss.draw_idle()
+                            except Exception:
+                                pass
+                        self.root.after(0, update_chart)
 
                 trainer.train(
                     X_tr,
@@ -694,9 +710,12 @@ class MagneticInversionApp:
                     callback=on_epoch,
                 )
 
-                lbl_status.config(text="Обучение завершено! Веса сохранены.")
-                btn_start.config(state=tk.NORMAL)
-                self.solve_nn()
+                def on_done():
+                    lbl_status.config(text="Обучение завершено! Веса сохранены.")
+                    btn_start.config(state=tk.NORMAL)
+                    self.solve_nn()
+
+                self.root.after(0, on_done)
 
             threading.Thread(target=worker, daemon=True).start()
 
