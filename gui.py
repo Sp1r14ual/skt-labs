@@ -485,7 +485,7 @@ class MagneticInversionApp:
             m_nn = self.classical_solver.compute_metrics(
                 sig_eval, self.nn_predicted_model, self.true_model
             )
-            lines.append("=== ИНС (Нейросеть) ===")
+            lines.append("Нейросеть")
             lines.append(f"MAE модели:     {m_nn['model_mae']:.4f}")
             lines.append(f"MSE модели:     {m_nn['model_mse']:.4f}")
             lines.append(f"R_sq поля (%):  {m_nn['R_sq']:.2f}%")
@@ -495,7 +495,7 @@ class MagneticInversionApp:
             m_reg = self.classical_solver.compute_metrics(
                 sig_eval, self.reg_predicted_model, self.true_model
             )
-            lines.append("=== γ-регуляризация (Лаб. 1) ===")
+            lines.append("Классический алгоритм")
             lines.append(f"MAE модели:     {m_reg['model_mae']:.4f}")
             lines.append(f"MSE модели:     {m_reg['model_mse']:.4f}")
             lines.append(f"R_sq поля (%):  {m_reg['R_sq']:.2f}%")
