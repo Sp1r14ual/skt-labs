@@ -18,7 +18,7 @@ def main():
         description="Решение обратной задачи магниторазведки с использованием ИНС"
     )
     parser.add_argument(
-        "--gui", action="store_true", help="Запустить графический интерфейс (по умолчанию)"
+        "--gui", action="store_true", help="Запустить графический интерфейс"
     )
     parser.add_argument(
         "--exp", action="store_true", help="Запустить эксперименты и сохранить графики"
@@ -39,15 +39,14 @@ def main():
         from train import run_full_training
         run_full_training()
     elif args.test:
-        print("=== ТЕСТИРОВАНИЕ МОДУЛЕЙ ===")
+        print("Тестирование модулей")
         import forward_problem
         import preprocessor
         import dataset
         import neural_net
         import classical_inversion
-        print(" Все модули успешно импортированы и готовы к работе.")
+        print("Все модули успешно импортированы")
     else:
-        # По умолчанию запускаем GUI
         import gui
         gui.main()
 

@@ -209,7 +209,6 @@ class SignalPreprocessor:
                 # Линейная интерполяция как безопасный fallback
                 return np.interp(self.target_x, x_obs, signal_obs)
 
-        # Полная реализация по пособию НГТУ
         try:
             spline = HermiteSmoothingSpline(
                 n_elements=self.n_elements,

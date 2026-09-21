@@ -27,6 +27,7 @@ class MagneticInversionApp:
         self.root.title("Обратная задача магниторазведки с использованием ИНС")
         self.root.geometry("1400x900")
         self.root.minsize(1100, 750)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_close)
 
         # 1. Физическая модель и компоненты
         self.survey = MagneticSurvey2D(nx=20, nz=10, n_receivers=40, component="Bx")
@@ -631,6 +632,15 @@ class MagneticInversionApp:
         canvas_loss.draw()
         canvas_loss.get_tk_widget().pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
 
+        def on_train_close():
+            try:
+                plt.close(fig_loss)
+            except Exception:
+                pass
+            win.destroy()
+
+        win.protocol("WM_DELETE_WINDOW", on_train_close)
+
         def start_train():
             try:
                 n_samples = int(ent_samples.get())
@@ -691,13 +701,30 @@ class MagneticInversionApp:
             threading.Thread(target=worker, daemon=True).start()
 
         btn_start = ttk.Button(
-            frame_top, text="▶ Запустить обучение", command=start_train
+            frame_top, text="Запустить обучение", command=start_train
         )
         btn_start.grid(row=1, column=4, columnspan=2, sticky=tk.E, pady=8)
+
+    def on_close(self):
+        """Полное и корректное завершение программы при закрытии окна."""
+        try:
+            plt.close("all")
+        except Exception:
+            pass
+        try:
+            self.root.quit()
+        except Exception:
+            pass
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
+        os._exit(0)
 
 
 def main():
     root = tk.Tk()
+
     # Настройка стиля ttk
     style = ttk.Style()
     try:
@@ -705,6 +732,7 @@ def main():
     except Exception:
         pass
     app = MagneticInversionApp(root)
+    root.protocol("WM_DELETE_WINDOW", app.on_close)
     root.mainloop()
 
 
