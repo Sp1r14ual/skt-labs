@@ -272,7 +272,7 @@ class MagneticInversionApp:
 
         btn_solve_reg = ttk.Button(
             grp_inv,
-            text="Решить γ-регуляризацией",
+            text="Решить классическим алгоритмом",
             command=self.solve_classical,
         )
         btn_solve_reg.pack(fill=tk.X, **pad_opts)
@@ -532,18 +532,18 @@ class MagneticInversionApp:
         # 3. Классическая регуляризация (ax[1, 0])
         if self.reg_predicted_model is not None:
             self._draw_grid_on_ax(
-                self.axes[1, 0], self.reg_predicted_model, "Восстановлено γ-регуляризацией"
+                self.axes[1, 0], self.reg_predicted_model, "Восстановлено классическим алгоритмом"
             )
         else:
             self.axes[1, 0].text(
                 0.5,
                 0.5,
-                "Нажмите 'Решить регуляризацией'",
+                "Нажмите 'Решить классическим алгоритмом'",
                 ha="center",
                 va="center",
                 transform=self.axes[1, 0].transAxes,
             )
-            self.axes[1, 0].set_title("Классическая γ-регуляризация")
+            self.axes[1, 0].set_title("Классическое решение")
 
         # 4. Профиль сигналов (ax[1, 1])
         ax_sig = self.axes[1, 1]
