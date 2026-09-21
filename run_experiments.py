@@ -106,8 +106,8 @@ def run_all_experiments(
     sig_lab1_obs = survey.add_noise(sig_lab1, noise_level=0.01)
 
     # Решение классической инверсией: без регуляризации и с регуляризацией gamma
-    rec_class_noreg = classical.solve(sig_lab1_obs, gamma=0.0, alpha=0.0)
-    rec_class_reg = classical.solve(sig_lab1_obs, gamma=0.05, alpha=1e-4)
+    rec_class_noreg = classical.solve(sig_lab1_obs, gamma=0.0)
+    rec_class_reg = classical.solve(sig_lab1_obs, gamma=0.05)
 
     # Решение обученной нейросетью
     rec_nn = predict_nn(sig_lab1_obs)
@@ -216,7 +216,7 @@ def run_all_experiments(
     sig_tilted_obs = survey.add_noise(sig_tilted, noise_level=0.01)
 
     rec_tilted_nn = predict_nn(sig_tilted_obs)
-    rec_tilted_reg = classical.solve(sig_tilted_obs, gamma=0.03, alpha=1e-4)
+    rec_tilted_reg = classical.solve(sig_tilted_obs, gamma=0.03)
 
     m_tilted_nn = classical.compute_metrics(
         sig_tilted_obs, rec_tilted_nn, true_tilted

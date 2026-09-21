@@ -56,18 +56,15 @@ class ClassicalInversion:
         self,
         g_obs: np.ndarray,
         gamma: float = 1e-2,
-        alpha: float = 1e-4,
         auto_scale: bool = True,
         non_negative: bool = True,
     ) -> np.ndarray:
         """
-        Решение СЛАУ (L^T L + C + alpha * I) lambda = L^T g_obs.
+        Решение СЛАУ (L^T L + C(gamma)) lambda = L^T g_obs.
         :param g_obs: Наблюденный сигнал в приемниках
-        :param gamma: Коэффициент регуляризации сглаживания по соседям
-        :param alpha: Коэффициент регуляризации Тихонова (по норме решения)
-        :param auto_scale: Автоматическое масштабирование gamma и alpha относительно нормы матрицы A
-                           (критически важно для перехода от безразмерных задач гравиразведки
-                           к магниторазведке в реальных метрах, где ||A|| ~ 10^-6)
+        :param gamma: Коэффициент регуляризации сглаживания по 4-связной сетке соседей
+        :param auto_scale: Автоматическое масштабирование gamma относительно нормы матрицы A
+                           (для перехода к магниторазведке в реальных метрах, где ||A|| ~ 10^-6)
         :param non_negative: Ограничивать ли результат снизу нулем (lambda >= 0)
         :return: Восстановленный вектор намагниченности lambda
         """
@@ -80,20 +77,14 @@ class ClassicalInversion:
             diag_mean = float(np.mean(np.diag(A)))
             scale = diag_mean if diag_mean > 0 else 1.0
             eff_gamma = gamma * scale
-            eff_alpha = alpha * scale
         else:
             eff_gamma = gamma
-            eff_alpha = alpha
 
-        # Регуляризующие добавки
+        # Регуляризующая добавка матрицы сглаживания C
         reg_matrix = np.zeros((self.n_cells, self.n_cells), dtype=np.float64)
         if eff_gamma > 0:
             reg_matrix += self.build_C(eff_gamma)
-        if eff_alpha > 0:
-            reg_matrix += eff_alpha * np.eye(self.n_cells)
-
-        # Решение СЛАУ
-        if eff_gamma == 0 and eff_alpha == 0:
+        else:
             reg_matrix += 1e-12 * np.eye(self.n_cells)
 
         rho_est = np.linalg.solve(A + reg_matrix, b)

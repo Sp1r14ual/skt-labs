@@ -253,14 +253,9 @@ class MagneticInversionApp:
         reg_params_frame.pack(fill=tk.X, **pad_opts)
 
         ttk.Label(reg_params_frame, text="γ (gamma):").grid(row=0, column=0, sticky=tk.W)
-        self.ent_gamma = ttk.Entry(reg_params_frame, width=8)
+        self.ent_gamma = ttk.Entry(reg_params_frame, width=12)
         self.ent_gamma.insert(0, "0.01")
-        self.ent_gamma.grid(row=0, column=1, padx=4, pady=2)
-
-        ttk.Label(reg_params_frame, text="α (alpha):").grid(row=0, column=2, sticky=tk.W, padx=4)
-        self.ent_alpha = ttk.Entry(reg_params_frame, width=8)
-        self.ent_alpha.insert(0, "0.0001")
-        self.ent_alpha.grid(row=0, column=3, padx=4, pady=2)
+        self.ent_gamma.grid(row=0, column=1, padx=6, pady=2)
 
         btn_solve_nn = ttk.Button(
             grp_inv,
@@ -456,13 +451,8 @@ class MagneticInversionApp:
         except ValueError:
             gamma = 0.01
 
-        try:
-            alpha = float(self.ent_alpha.get())
-        except ValueError:
-            alpha = 0.0001
-
         self.reg_predicted_model = self.classical_solver.solve(
-            sig_to_use, gamma=gamma, alpha=alpha, auto_scale=True
+            sig_to_use, gamma=gamma, auto_scale=True
         )
         self._update_metrics_display()
         self.update_plots()
