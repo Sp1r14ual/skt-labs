@@ -91,13 +91,13 @@ def test_comparison():
         ax.set_ylabel("Z")
 
     # --- Истинная модель ---
-    draw_density(axes[0, 1], true_rho, "Истинная модель (1-й семестр)")
+    draw_density(axes[0, 1], true_rho, "Истинная модель")
 
-    # --- Классическая восстановленная модель ---
-    draw_density(axes[1, 0], rho_classic, f"Классич. инверсия (MSE плотности={mse_density_classic:.4f})")
+    # --- Модель, восстановленная классическим алгоритмом ---
+    draw_density(axes[1, 0], rho_classic, f"Классический алгоритм (MSE={mse_density_classic:.4f})")
 
-    # --- Восстановленная нейросетью модель ---
-    draw_density(axes[1, 1], rho_nn, f"Нейросеть (MSE плотности={mse_density_nn:.4f})")
+    # --- Модель, восстановленная нейросетью ---
+    draw_density(axes[1, 1], rho_nn, f"Нейросеть (MSE={mse_density_nn:.4f})")
 
     plt.tight_layout()
     result_img = os.path.join(os.path.dirname(__file__), "nn_inversion_result.png")

@@ -24,7 +24,7 @@ class GravityInversionApp(ctk.CTk):
     def __init__(self):
         super().__init__()
 
-        self.title("Комплекс гравиразведки: Обратные задачи и Нейросети (НГТУ ФПМИ)")
+        self.title("Гравиразведка")
         self.geometry("1400x880")
         self.minsize(1100, 750)
 
@@ -79,9 +79,9 @@ class GravityInversionApp(ctk.CTk):
         self.sidebar.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
 
         # Заголовок
-        lbl_title = ctk.CTkLabel(self.sidebar, text="ГРАВИРАЗВЕДКА 2D", font=ctk.CTkFont(size=20, weight="bold"))
+        lbl_title = ctk.CTkLabel(self.sidebar, text="ГРАВИРАЗВЕДКА", font=ctk.CTkFont(size=20, weight="bold"))
         lbl_title.pack(padx=10, pady=(10, 5))
-        lbl_sub = ctk.CTkLabel(self.sidebar, text="Инверсия & Deep Learning", font=ctk.CTkFont(size=12), text_color="gray")
+        lbl_sub = ctk.CTkLabel(self.sidebar, text="Решение обратной задачи гравиразведки", font=ctk.CTkFont(size=12), text_color="gray")
         lbl_sub.pack(padx=10, pady=(0, 15))
 
         # Блок выбора модели
@@ -117,7 +117,7 @@ class GravityInversionApp(ctk.CTk):
         sec_inv.pack(fill="x", padx=5, pady=8)
         ctk.CTkLabel(sec_inv, text="3. Классическая регуляризация", font=ctk.CTkFont(size=14, weight="bold")).pack(anchor="w", padx=10, pady=5)
 
-        self.lbl_gamma = ctk.CTkLabel(sec_inv, text="Параметр γ: 1e-1 (0.1)")
+        self.lbl_gamma = ctk.CTkLabel(sec_inv, text="Параметр γ")
         self.lbl_gamma.pack(anchor="w", padx=10, pady=(0, 2))
         self.gamma_var = ctk.StringVar(value="0.1")
         gamma_entry = ctk.CTkEntry(sec_inv, textvariable=self.gamma_var)
@@ -139,7 +139,7 @@ class GravityInversionApp(ctk.CTk):
         )
         btn_run_both.pack(fill="x", padx=10, pady=(8, 6))
 
-        btn_run_classic = ctk.CTkButton(sec_actions, text="Решить: Классический метод (γ)", command=self.on_run_classic)
+        btn_run_classic = ctk.CTkButton(sec_actions, text="Решить: Классический метод (γ-регуляризация)", command=self.on_run_classic)
         btn_run_classic.pack(fill="x", padx=10, pady=4)
 
         btn_run_nn = ctk.CTkButton(sec_actions, text="Решить: Нейронная сеть", fg_color="#2b7a4b", hover_color="#1d5533", command=self.on_run_nn)
