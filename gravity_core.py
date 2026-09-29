@@ -133,14 +133,20 @@ class GravitySolver:
         rho[11:29, 12:16] = 1.0
         return rho.flatten()
 
-    def get_deep_object_model(self):
-        """7. Глубокозалегающий объект"""
+    def get_surface_object_model(self):
+        """7. Поверхностная аномалия"""
         rho = np.zeros((self.nx, self.nz))
         rho[15:25, 14:18] = 1.2
         return rho.flatten()
 
+    def get_deep_object_model(self):
+        """8. Глубокозалегающий объект"""
+        rho = np.zeros((self.nx, self.nz))
+        rho[15:25, 0:3] = 1.2
+        return rho.flatten()
+
     def get_fault_step_model(self):
-        """8. Ступенчатый сброс"""
+        """9. Ступенчатый сброс"""
         rho = np.zeros((self.nx, self.nz))
         # Поднятое левое крыло
         rho[5:20, 4:7] = 1.0

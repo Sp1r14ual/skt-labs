@@ -97,8 +97,9 @@ class GravityInversionApp(ctk.CTk):
             "4. Сложная форма / разлом",
             "5. Два объекта по латерали",
             "6. Перекрывающие объекты",
-            "7. Глубокозалегающий объект",
-            "8. Ступенчатый сброс",
+            "7. Поверхностная аномалия",
+            "8. Глубоколежащий объект",
+            "9. Ступенчатый сброс",
             "Случайная (1 объект)",
             "Случайная (2-3 объекта)"
         ]
@@ -200,9 +201,11 @@ class GravityInversionApp(ctk.CTk):
             self.true_rho = self.solver.get_two_lateral_objects_model()
         elif "6. Перекрывающие" in choice:
             self.true_rho = self.solver.get_overlapping_objects_model()
-        elif "7. Глубокозалегающий" in choice:
+        elif "7. Поверхностная" in choice:
+            self.true_rho = self.solver.get_surface_object_model()
+        elif "8. Глубоколежащий" in choice:
             self.true_rho = self.solver.get_deep_object_model()
-        elif "8. Ступенчатый" in choice:
+        elif "9. Ступенчатый" in choice:
             self.true_rho = self.solver.get_fault_step_model()
         elif "Случайная (1 объект)" in choice:
             self.true_rho = self.solver.generate_random_model(max_anomalies=1)
