@@ -45,6 +45,19 @@ class GravityInversionApp(ctk.CTk):
         self.on_compute_forward()
         self.on_run_both()
 
+        # Полное завершение программы при закрытии окна по крестику
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+    def on_closing(self):
+        try:
+            plt.close("all")
+            self.quit()
+            self.destroy()
+        except Exception:
+            pass
+        finally:
+            os._exit(0)
+
     def load_neural_network(self):
         weights_path = os.path.join(os.path.dirname(__file__), "gravity_nn.pth")
         if os.path.exists(weights_path):
