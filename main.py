@@ -89,11 +89,23 @@ class GravityInversionApp(ctk.CTk):
         sec_model.pack(fill="x", padx=5, pady=8)
         ctk.CTkLabel(sec_model, text="1. Выбор геометрии среды", font=ctk.CTkFont(size=14, weight="bold")).pack(anchor="w", padx=10, pady=5)
 
-        self.model_preset_var = ctk.StringVar(value="Стандартная (ЛР №1)")
+        self.model_preset_var = ctk.StringVar(value="1. Стандартная аномалия")
+        self.model_presets = [
+            "1. Стандартная аномалия",
+            "2. Аномалия среднего размера",
+            "3. Наклонная аномалия / дайка",
+            "4. Сложная форма / разлом",
+            "5. Два объекта по латерали",
+            "6. Перекрывающие объекты",
+            "7. Глубокозалегающий объект",
+            "8. Ступенчатый сброс",
+            "Случайная (1 объект)",
+            "Случайная (2-3 объекта)"
+        ]
         preset_menu = ctk.CTkOptionMenu(
             sec_model,
             variable=self.model_preset_var,
-            values=["Стандартная (ЛР №1)", "Случайная (1 объект)", "Случайная (2-3 объекта)", "Наклонный пласт"],
+            values=self.model_presets,
             command=self.on_preset_change
         )
         preset_menu.pack(fill="x", padx=10, pady=(0, 8))
@@ -176,14 +188,23 @@ class GravityInversionApp(ctk.CTk):
         self.lbl_noise.configure(text=f"Уровень шума: {val:.1f}%")
 
     def on_preset_change(self, choice):
-        if choice == "Стандартная (ЛР №1)":
+        if "1. Стандартная аномалия" in choice:
             self.true_rho = self.solver.get_standard_test_model()
-        elif choice == "Наклонный пласт":
-            rho = np.zeros((self.solver.nx, self.solver.nz))
-            for i in range(8):
-                rho[12 + i, 4 + i // 2 : 7 + i // 2] = 1.0
-            self.true_rho = rho.flatten()
-        elif choice == "Случайная (1 объект)":
+        elif "2. Аномалия среднего" in choice:
+            self.true_rho = self.solver.get_medium_anomaly_model()
+        elif "3. Наклонная" in choice:
+            self.true_rho = self.solver.get_inclined_anomaly_model()
+        elif "4. Сложная форма" in choice:
+            self.true_rho = self.solver.get_complex_shape_model()
+        elif "5. Два объекта" in choice:
+            self.true_rho = self.solver.get_two_lateral_objects_model()
+        elif "6. Перекрывающие" in choice:
+            self.true_rho = self.solver.get_overlapping_objects_model()
+        elif "7. Глубокозалегающий" in choice:
+            self.true_rho = self.solver.get_deep_object_model()
+        elif "8. Ступенчатый" in choice:
+            self.true_rho = self.solver.get_fault_step_model()
+        elif "Случайная (1 объект)" in choice:
             self.true_rho = self.solver.generate_random_model(max_anomalies=1)
         else:
             self.true_rho = self.solver.generate_random_model(max_anomalies=3)

@@ -78,7 +78,7 @@ class GravitySolver:
         return np.linalg.solve(A + C, b)
 
     def get_standard_test_model(self):
-        """Модель из отчета 1-го семестра: аномалия 4x3 ячейки"""
+        """1. Стандартная аномалия"""
         rho = np.zeros(self.n_cells)
         for ix in range(8, 12):
             for iz in range(3, 6):
@@ -86,8 +86,70 @@ class GravitySolver:
                 rho[idx] = 1.0
         return rho
 
+    def get_medium_anomaly_model(self):
+        """2. Аномалия среднего размера"""
+        rho = np.zeros((self.nx, self.nz))
+        # Крупное тело в центре сетки
+        rho[14:26, 6:14] = 1.0
+        return rho.flatten()
+
+    def get_inclined_anomaly_model(self):
+        """3. Наклонная аномалия / дайка"""
+        rho = np.zeros((self.nx, self.nz))
+        # Наклонный пласт от малой глубины к большой
+        for i in range(12):
+            x_idx = 10 + i
+            z_top = 2 + i
+            z_bot = min(self.nz, z_top + 4)
+            if x_idx < self.nx and z_top < self.nz:
+                rho[x_idx, z_top:z_bot] = 1.0
+        return rho.flatten()
+
+    def get_complex_shape_model(self):
+        """4. Аномалия сложной формы / пласт с разломом"""
+        rho = np.zeros((self.nx, self.nz))
+        # Горизонтальное тело
+        rho[8:28, 9:14] = 0.9
+        # Вертикальный подъем / выступ (ступень)
+        rho[22:28, 3:10] = 1.2
+        rho[13:17, 7:10] = 0.8
+        return rho.flatten()
+
+    def get_two_lateral_objects_model(self):
+        """5. Два объекта, разнесенные по латерали"""
+        rho = np.zeros((self.nx, self.nz))
+        # Левый объект
+        rho[6:12, 6:12] = 1.0
+        # Правый объект
+        rho[28:34, 6:12] = 1.0
+        return rho.flatten()
+
+    def get_overlapping_objects_model(self):
+        """6. Перекрывающие объекты: экранирование"""
+        rho = np.zeros((self.nx, self.nz))
+        # Верхний тонкий приповерхностный пласт
+        rho[15:25, 2:4] = 1.0
+        # Нижнее массивное глубокое тело
+        rho[11:29, 12:16] = 1.0
+        return rho.flatten()
+
+    def get_deep_object_model(self):
+        """7. Глубокозалегающий объект"""
+        rho = np.zeros((self.nx, self.nz))
+        rho[15:25, 14:18] = 1.2
+        return rho.flatten()
+
+    def get_fault_step_model(self):
+        """8. Ступенчатый сброс"""
+        rho = np.zeros((self.nx, self.nz))
+        # Поднятое левое крыло
+        rho[5:20, 4:7] = 1.0
+        # Опущенное правое крыло
+        rho[20:35, 10:13] = 1.0
+        return rho.flatten()
+
     def generate_random_model(self, max_anomalies=3):
-        """Генерация реалистичной геологической модели (1-3 аномалии)"""
+        """Генерация случайной геологической модели (1-3 аномалии)"""
         rho = np.zeros((self.nx, self.nz))
         num_bodies = np.random.randint(1, max_anomalies + 1)
 
