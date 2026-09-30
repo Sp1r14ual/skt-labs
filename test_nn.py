@@ -22,8 +22,17 @@ def test_comparison():
     model.load_state_dict(torch.load(weights_path, map_location=device, weights_only=True))
     model.eval()
 
-    # 2. Формирование тестовой модели из первой лабораторной (прямоугольная аномалия)
-    true_rho = solver.get_standard_test_model()
+    # 2. Формирование тестовой модели
+    # true_rho = solver.get_standard_test_model()
+    # true_rho = solver.get_medium_anomaly_model()
+    # true_rho = solver.get_inclined_anomaly_model()
+    # true_rho = solver.get_complex_shape_model()
+    # true_rho = solver.get_two_lateral_objects_model()
+    # true_rho = solver.get_overlapping_objects_model()
+    # true_rho = solver.get_surface_object_model()
+    # true_rho = solver.get_deep_object_model()
+    # true_rho = solver.get_fault_step_model()
+    true_rho = solver.generate_random_model()
 
     # Прямая задача: расчет наблюдаемого поля с шумом
     g_true = solver.forward(true_rho)

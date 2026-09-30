@@ -293,7 +293,7 @@ class GravityInversionApp(ctk.CTk):
             g_c = self.solver.forward(self.classic_rho)
             misfit_c = np.linalg.norm(self.g_obs - g_c)
             mse_c = np.mean((self.true_rho - self.classic_rho)**2)
-            lines.append("--- КЛАССИКА (γ-регуляриз.) ---")
+            lines.append("--- Классическая инверсия ---")
             lines.append(f" Время:    {time_classic:.2f} мс")
             lines.append(f" Невязка:  {misfit_c:.4f}")
             lines.append(f" MSE ρ:    {mse_c:.5f}\n")
@@ -302,13 +302,13 @@ class GravityInversionApp(ctk.CTk):
             g_n = self.solver.forward(self.nn_rho)
             misfit_n = np.linalg.norm(self.g_obs - g_n)
             mse_n = np.mean((self.true_rho - self.nn_rho)**2)
-            lines.append("--- НЕЙРОСЕТЬ (PyTorch) ---")
+            lines.append("--- Нейросеть ---")
             lines.append(f" Время:    {time_nn:.2f} мс")
             lines.append(f" Невязка:  {misfit_n:.4f}")
             lines.append(f" MSE ρ:    {mse_n:.5f}")
             if time_classic and time_nn > 0:
                 speedup = time_classic / time_nn
-                lines.append(f" Ускорение:{speedup:.1f}x быстрее!")
+                lines.append(f"Быстрее в {speedup:.1f} раз")
 
         self.txt_metrics.insert(tk.END, "\n".join(lines))
 
@@ -335,11 +335,11 @@ class GravityInversionApp(ctk.CTk):
         ax0.legend(loc="upper right", fontsize=8)
 
         # 2. Истинная модель
-        self._plot_density(self.axes[0, 1], self.true_rho, "Истинная модель среды (True ρ)")
+        self._plot_density(self.axes[0, 1], self.true_rho, "Истинная модель среды")
 
         # 3. Классическая модель
         if self.classic_rho is not None:
-            self._plot_density(self.axes[1, 0], self.classic_rho, "Классическая инверсия (γ)")
+            self._plot_density(self.axes[1, 0], self.classic_rho, "Восстановление классической инверсией")
         else:
             self.axes[1, 0].set_title("Классическая инверсия (не рассчитана)")
 
