@@ -69,7 +69,7 @@ def test_comparison():
     print(f"  - Невязка поля:        {misfit_classic:.5f}")
     print(f"  - MSE ошибки плотности:{mse_density_classic:.5f}")
     print("\nИнверсия с помощью Нейросети:")
-    print(f"  - Время решения:       {time_nn * 1000:.2f} мс (в {time_classic / max(time_nn, 1e-5):.1f}x быстрее!)")
+    print(f"  - Время решения:       {time_nn * 1000:.2f} мс")
     print(f"  - Невязка поля:        {misfit_nn:.5f}")
     print(f"  - MSE ошибки плотности:{mse_density_nn:.5f}")
     print("=" * 65)
