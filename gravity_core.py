@@ -11,7 +11,7 @@ class GravitySolver:
         self.n_receivers = n_receivers
         self.receiver_z = receiver_z
 
-        # 1. Построение координат ячеек (как в отчете: x=ix*dx, z=-iz*dz)
+        # 1. Построение координат ячеек
         self.cells = []
         for ix in range(nx):
             for iz in range(nz):
@@ -20,20 +20,19 @@ class GravitySolver:
                 self.cells.append((x, z))
         self.cells = np.array(self.cells)
 
-        # 2. Построение профиля приемников (z = receiver_z)
+        # 2. Построение профиля приемников
         self.receivers = np.column_stack([
             np.linspace(0, nx * dx, n_receivers),
             np.full(n_receivers, receiver_z)
         ])
 
-        # 3. Вычисление матрицы прямого оператора L (векторизованно)
+        # 3. Вычисление матрицы прямого оператора L
         self.L = self._build_L()
 
         # 4. Список соседей и матрица регуляризации C
         self.neighbors = self._get_neighbors()
 
     def _build_L(self):
-        # rx: (n_receivers, 1), cx: (1, n_cells)
         dx = self.receivers[:, 0:1] - self.cells[:, 0:1].T
         dz = self.receivers[:, 1:2] - self.cells[:, 1:2].T
         r = np.sqrt(dx**2 + dz**2) + 1e-8
