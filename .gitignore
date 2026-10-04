@@ -218,7 +218,5 @@ __marimo__/
 .streamlit/secrets.toml
 
 #PyTorch
-*.pt
-*.npz
+*.pth
 *.png
-results/
